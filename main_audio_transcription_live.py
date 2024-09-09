@@ -1,4 +1,3 @@
-import time
 import tkinter as tk
 import configparser
 from tkinter import scrolledtext
@@ -69,7 +68,7 @@ def process_audio(shared_queue: queue):
         texts = transcribe_audio(logger, model, audio)
 
         transcription_queue.put(''.join(texts))
-        print(texts)
+        logger.debug(texts)
         conversation.extend(texts)
         shared_queue.task_done()
         iter = iter + 1
@@ -108,7 +107,7 @@ def send_to_gpt(promptNo, text):
     if len(prompts) >= promptNo:
         prompt = prompts[promptNo - 1]
     logger.debug('Using prompt: "' + prompt + '" with text "' + text + '"')
-    completions = get_completions(prompt, text, gpt_model, gpt_temperature)
+    completions = get_completions(prompt, text, gpt_model, gpt_maxtokens, gpt_temperature)
     logger.debug(completions)
     return completions
 
@@ -117,7 +116,7 @@ def send_to_gpt_stream(promptNo, text):
     if len(prompts) >= promptNo:
         prompt = prompts[promptNo - 1]
     logger.debug('Using prompt: "' + prompt + '" with text "' + text + '"')
-    completions = get_completions_stream(prompt, text, gpt_model, gpt_temperature)
+    completions = get_completions_stream(prompt, text, gpt_model, gpt_maxtokens, gpt_temperature)
     return completions
 
 def handle_key(event, no, text_area: scrolledtext.ScrolledText):
@@ -292,15 +291,8 @@ def create_gui():
 
 def init_prompts_from_config(config, prompts):
     try:
-        prompts.append(config.get('PROMPTS', 'P1'))
-        prompts.append(config.get('PROMPTS', 'P2'))
-        prompts.append(config.get('PROMPTS', 'P3'))
-        prompts.append(config.get('PROMPTS', 'P4'))
-        prompts.append(config.get('PROMPTS', 'P5'))
-        prompts.append(config.get('PROMPTS', 'P6'))
-        prompts.append(config.get('PROMPTS', 'P7'))
-        prompts.append(config.get('PROMPTS', 'P8'))
-        prompts.append(config.get('PROMPTS', 'P9'))
+        for i in range(1, 10):
+            prompts.append(config.get('PROMPTS', f'P{i}'))
     except:
         pass
 
@@ -323,6 +315,7 @@ vad_mode = config.getint('RECORDING', 'vad_mode')
 gpt_streaming = config.getboolean('GPT', 'gpt_streaming')
 gpt_model = config.get('GPT', 'gpt_model')
 gpt_temperature = config.getfloat('GPT', 'gpt_temperature')
+gpt_maxtokens = config.getint('GPT', 'gpt_maxtokens')
 
 font_name = config.get('VISUAL', 'font_name')
 font_size = config.getint('VISUAL', 'font_size')
@@ -362,7 +355,7 @@ else:
 # Shared queue for communication between threads
 shared_queue = queue.Queue()
 
-print("Recording started")
+logger.info("Recording started")
 # Start threads
 thread1 = threading.Thread(target=read_stream, args=(stream, chunk_size, frame_rate, shared_queue))
 thread2 = threading.Thread(target=process_audio, args=(shared_queue,))
@@ -377,7 +370,7 @@ thread1.join()
 thread2.join()
 
 logger.info("stop")
-print(''.join(conversation))
+logger.info(''.join(conversation))
 stream.stop_stream()
 stream.close()
 p_audio.terminate()

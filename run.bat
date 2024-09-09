@@ -1,1 +1,1 @@
-python main.py
+python main_audio_transcription_live.py

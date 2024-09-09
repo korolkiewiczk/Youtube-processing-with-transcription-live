@@ -1,6 +1,8 @@
+import hashlib
+import json
+import os
 import random
 import re
-
 
 def get_random_color():
     color_palette = ['#99341e',
@@ -86,3 +88,42 @@ def find_sentences(text):
         start = end
 
     return indices
+
+# FILES
+
+def get_data_folder(folder, file_name):
+    folder_path = f"data/{folder}/"
+    
+    # Check if the folder exists, if not, create it
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+
+    # Return the full path with the provided file name, if any
+    if file_name:
+        return os.path.join(folder_path, file_name)
+    return folder_path
+
+def save_transcription_to_file(transcription, file_hash, youtube_url):
+    file_path = get_data_folder(file_hash, "transcription.txt")
+    with open(file_path, 'w', encoding='utf-8') as f:
+        f.write(f"{youtube_url}\n")
+        f.write(transcription)
+
+def hash_url(url):
+    return hashlib.sha1(url.encode()).hexdigest()
+
+def read_transcription_file(file_path):
+    with open(file_path, 'r', encoding='utf-8') as file:
+        lines = file.readlines()
+        url = lines[0].strip()
+        transcription = ''.join(lines[1:]).strip()
+    return url, transcription
+
+def read_prompt_template(prompt_file_path):
+    with open(prompt_file_path, 'r', encoding='utf-8') as file:
+        prompt_template = file.read()
+    return prompt_template
+
+def save_as_json_to_file(json_text, output_file_path):
+    with open(output_file_path, 'w', encoding='utf-8') as file:
+        json.dump(json.loads(json_text), file, ensure_ascii=False, indent=4)

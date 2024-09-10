@@ -1,0 +1,10 @@
+Używając pełnego podsumowania dokumentu jako kontekstu, podsumuj daną część.
+Upewnij się, że podsumowanie jest zwięzłe i zawiera kluczowe punkty. Podsumowanie w języku polskim.
+
+<full_summary> 
+{full_summary}
+</full_summary>
+
+<part>
+{part}
+</part>

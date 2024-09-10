@@ -107,7 +107,7 @@ def send_to_gpt(promptNo, text):
     if len(prompts) >= promptNo:
         prompt = prompts[promptNo - 1]
     logger.debug('Using prompt: "' + prompt + '" with text "' + text + '"')
-    completions = get_completions(prompt, text, gpt_model, gpt_maxtokens, gpt_temperature)
+    completions = get_completions(text, gpt_model, gpt_maxtokens, gpt_temperature, prompt)
     logger.debug(completions)
     return completions
 
@@ -116,7 +116,7 @@ def send_to_gpt_stream(promptNo, text):
     if len(prompts) >= promptNo:
         prompt = prompts[promptNo - 1]
     logger.debug('Using prompt: "' + prompt + '" with text "' + text + '"')
-    completions = get_completions_stream(prompt, text, gpt_model, gpt_maxtokens, gpt_temperature)
+    completions = get_completions_stream(text, gpt_model, gpt_maxtokens, gpt_temperature, prompt)
     return completions
 
 def handle_key(event, no, text_area: scrolledtext.ScrolledText):

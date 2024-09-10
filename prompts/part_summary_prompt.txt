@@ -1,0 +1,5 @@
+Połącz poniższe części w jeden spójny tekst i zredaguj go jako jeden tekst zachowując logikę wypowiedzi. Użyj składni markdown.
+
+<part_summaries>
+{part_summaries}
+</part_summaries>

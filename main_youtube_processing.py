@@ -31,8 +31,13 @@ async def create_transcription(url):
     
     # Check if the transcription file already exists
     if not os.path.exists(file_path):
+        use_api = config.getboolean('WHISPER', 'use_api')
+        command = ['python', 'main_transcribe_yt.py', '-c', url]
+        if use_api:
+            command.append('-a')
+        
         process = await asyncio.create_subprocess_exec(
-            'python', 'main_transcribe_yt.py', '-c', url, '-a',
+            *command,
             stdout=None, stderr=None
         )
         await process.communicate()
@@ -85,6 +90,7 @@ async def create_tables():
         {"name": "Hash", "type": "singleLineText"},
         {"name": "Title", "type": "singleLineText"},
         {"name": "Description", "type": "multilineText"},
+        {"name": "Summary", "type": "multilineText"},
         {"name": "Tags", "type": "singleLineText"},
         {"name": "Url", "type": "singleLineText"},
         {"name": "Transcription", "type": "multilineText"}

@@ -9,7 +9,7 @@ import logging
 from keys import OPENAI_API_KEY
 from pytube_pollyfill import fix_pytube_issues
 from transcribe_audio import transcribe_audio
-import openai
+from openai import OpenAI
 from pydub import AudioSegment
 from pydub.silence import split_on_silence
 
@@ -54,11 +54,10 @@ def process_audio(audio_data):
     return transcription_result
 
 def process_audio_with_whisper_api(audio_data, whisper_model):
-    openai.api_key = OPENAI_API_KEY
-    client = openai.Audio()
+    client = OpenAI(api_key=OPENAI_API_KEY)
     
     if len(audio_data) <= 25 * 1024 * 1024:
-        return transcribe_audio(client, audio_data, whisper_model)
+        return transcribe_audio_whisper(client, audio_data, whisper_model)
 
     logger.info('Splitting audio...')
     audio_chunks = split_audio_into_chunks(audio_data)
@@ -68,15 +67,14 @@ def process_audio_with_whisper_api(audio_data, whisper_model):
     
     return " ".join(transcriptions)
 
-def transcribe_audio(client, audio_data, whisper_model):
+def transcribe_audio_whisper(client, audio_data, whisper_model):
     audio_buffer = io.BytesIO(audio_data)
     audio_buffer.name = "audio.mp3"
-    transcription = client.transcribe(
+    response = client.audio.transcriptions.create(
         model=whisper_model,
-        file=audio_buffer,
-        response_format="text"
+        file=audio_buffer
     )
-    return transcription
+    return response.text
 
 def split_audio_into_chunks(audio_data):
     audio = AudioSegment.from_file(io.BytesIO(audio_data), format="mp3")
@@ -91,12 +89,11 @@ def transcribe_audio_chunks(client, audio_chunks, whisper_model):
         chunk.export(chunk_buffer, format="mp3")
         chunk_buffer.name = f"audio_chunk_{idx}.mp3"
         chunk_buffer.seek(0)
-        transcription = client.transcribe(
+        response = client.audio.transcriptions.create(
             model=whisper_model,
-            file=chunk_buffer,
-            response_format="text"
+            file=chunk_buffer
         )
-        transcriptions.append(transcription)
+        transcriptions.append(response.text)
     return transcriptions
 
 # SETUP

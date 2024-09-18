@@ -16,11 +16,11 @@ async def fetch_unprocessed_urls():
 async def mark_url_as_processed(record_id):
     airtable_url_inputs.update(record_id, {"Processed": True})
 
-async def save_summary_to_airtable(summary_json, url, transcription, hash):
+async def save_summary_to_airtable(summary_json, url, title, hash):
     summary_data = json.loads(summary_json)  # Converts JSON string to dictionary
     summary_data = {key.capitalize(): value for key, value in summary_data.items()}
+    summary_data['Title'] = title
     summary_data['Url'] = url
-    summary_data['Transcription'] = transcription
     summary_data['Hash'] = hash
 
     airtable_youtube_summaries.insert(summary_data)
@@ -64,10 +64,10 @@ async def summarize_transcription(file_path):
 async def process_url(record_id, url):
     try:
         file_path, hash = await create_transcription(url)
-        url, transcription = read_transcription_file(file_path)
+        url, title, _ = read_transcription_file(file_path)
 
         summary_json = await summarize_transcription(file_path)
-        await save_summary_to_airtable(summary_json, url, transcription, hash)
+        await save_summary_to_airtable(summary_json, url, title, hash)
         await mark_url_as_processed(record_id)
 
     except Exception as e:
@@ -93,7 +93,7 @@ async def create_tables():
         {"name": "Summary", "type": "multilineText"},
         {"name": "Tags", "type": "singleLineText"},
         {"name": "Url", "type": "singleLineText"},
-        {"name": "Transcription", "type": "multilineText"}
+        {"name": "Category", "type": "singleLineText"}
     ])
 
 async def process_loop():
@@ -102,19 +102,22 @@ async def process_loop():
     while True:
         urls = await fetch_unprocessed_urls()
         if not urls:
-            await asyncio.sleep(10)
+            await asyncio.sleep(sleep_time)
             continue
 
         for record_id, url in urls:
             await process_url(record_id, url) 
 
-        await asyncio.sleep(10) 
+        await asyncio.sleep(sleep_time) 
 
 config = configparser.ConfigParser()
 config.read('config.ini')
 
 URL_INPUTS_TABLE = config.get('AIRTABLE', 'inputs_table_name')
 YOUTUBE_SUMMARIES_TABLE = config.get('AIRTABLE', 'summaries_table_name')
+
+sleep_time = config.getint('PROCESSING', 'sleep_time')
+
 
 # Airtable instance
 airtable_url_inputs = Airtable(AIRTABLE_BASE_ID, URL_INPUTS_TABLE, AIRTABLE_API_KEY)

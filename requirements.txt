@@ -1,5 +1,10 @@
-numpy==1.24.2
-openai==0.27.6
+aiohttp==3.10.5
+airtable_python_wrapper==0.15.3
+ffmpeg_python==0.2.0
+numpy==1.26.4
+openai==1.45.1
 openai_whisper==20231117
 PyAudioWPatch==0.2.12.6
+pydub==0.25.1
+pytubefix==6.16.2
 webrtcvad==2.0.10

@@ -1,3 +1,4 @@
+import os
 import tkinter as tk
 import configparser
 from tkinter import scrolledtext
@@ -51,7 +52,13 @@ def read_stream(stream, chunk, frame_rate, shared_queue):
             silent_frames = 0
 
 def process_audio(shared_queue: queue):
+    from datetime import datetime
     iter = 1
+    # Create a unique directory name based on the current date and time
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    records_dir = os.path.join('records', timestamp)
+    if not os.path.exists(records_dir):
+        os.makedirs(records_dir)
     while True:
         all_frames = shared_queue.get()
         if all_frames is None:  # None is used as a signal to stop the thread
@@ -60,9 +67,9 @@ def process_audio(shared_queue: queue):
         logger.debug("converting chunk")
         converted_buffer, audio = convert_audio_to_16000hz(logger, frame_rate, all_frames)
 
-        if save_wav:
+        if save_wav_enabled:
             logger.debug("saving chunk")
-            save_wav(p_audio, 1, 16000, audio_format, converted_buffer, "out_"+str(iter)+".wav")
+            save_wav(p_audio, 1, 16000, audio_format, converted_buffer, os.path.join(records_dir, "out_"+str(iter)+".wav"))
 
         logger.debug("transcribing chunk")
         texts = transcribe_audio(logger, model, audio)
@@ -309,7 +316,7 @@ record_seconds = config.getint('RECORDING', 'record_seconds')
 max_record_seconds = config.getint('RECORDING', 'max_record_seconds')
 audio_format = pyaudio.paInt16
 required_silence_length = config.getint('RECORDING', 'required_silence_length')
-save_wav = config.getboolean('RECORDING', 'save_wav')
+save_wav_enabled = config.getboolean('RECORDING', 'save_wav')
 vad_mode = config.getint('RECORDING', 'vad_mode')
 
 gpt_streaming = config.getboolean('GPT', 'gpt_streaming')

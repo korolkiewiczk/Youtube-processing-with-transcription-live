@@ -1,5 +1,5 @@
 import io
-from pytube import YouTube
+from pytubefix import YouTube
 import ffmpeg
 from pydub import AudioSegment
 
@@ -20,7 +20,11 @@ def download_audio_as_bytes(youtube_url):
 
     stdout, _ = process.communicate(input=audio_buffer.read())
 
-    return stdout
+    return stdout, yt.title
+
+def get_title(youtube_url):
+    yt = YouTube(youtube_url)
+    return yt.title
 
 def split_audio(audio_data, chunk_duration_ms):
     audio = AudioSegment.from_file(io.BytesIO(audio_data), format="mp3")

@@ -1,12 +1,20 @@
-Poniższy tekst jest transkrypcją nagrania wideo. Zwróć json zawierający: jednozdaniowe podsumowanie transkrypcji (tytuł), rozbudowane streszczenie zawierające jak najwięcej istotnych informacji z transkrypcji, 5 tagów opisujących te nagranie.
+Poniższy tekst jest transkrypcją nagrania wideo o nazwie title.
+Zwróć json zawierający: 
+-rozbudowane streszczenie zawierające jak najwięcej istotnych informacji z transkrypcji
+-5 tagów opisujących te nagranie.
+-kategoria do jakiej można przypisać nagranie, np. nauka, medycyna, motoryzacja
 
 <json_structure>
 { 
-    "title": "tytuł nagrania na podstawie transkrypcji", 
-    "description": "rozbudowane streszczenie transkrypcji", 
-    "tags": "#tag1 #tag2 #tag3 #tag4 #tag5"
+    "description": "rozbudowane streszczenie transkrypcji",
+    "tags": "#tag1 #tag2 #tag3 #tag4 #tag5",
+    "category": "kategoria"
 }
 </json_structure>
+
+<title>
+{title}
+</title>
 
 <transcription>
 {transcription}
@@ -14,4 +22,5 @@ Poniższy tekst jest transkrypcją nagrania wideo. Zwróć json zawierający: je
 
 Jako wynik podaj wyłącznie podany w opisie json, musi być on odpowiednio encodowany jeśli zawiera w treści np. cudzysłów. Musi być poprawnym kompletnym plikiem json.
 Streszczenie ma być mocno rozbudowane, w języku polskim i zawierać jak najwięcej szczegółów dotyczących treści nagrania.
+Kategoria nagrania powinna być jednym słowem.
 Nie dodawaj żadnych dodatkowych znaczników formatowania i tym podobnych. Tekst ma być czystym ciągiem JSON.

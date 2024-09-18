@@ -13,12 +13,13 @@ def divide_transcription(transcription, model, max_tokens, temperature):
     parts = get_completions(prompt, model, max_tokens, temperature)
     return parts.split("\n\n")  # Assuming parts are separated by double newlines
 
-def generate_summary(url, transcription, prompt_template, model, max_tokens, temperature):
+def generate_summary(transcription, title, prompt_template, model, max_tokens, temperature):
     # Divide the transcription into parts
     parts = divide_transcription(transcription, model, max_tokens, temperature)
+    logger.debug(f"Parts:\n{parts}")
     
     # Generate full document summary
-    full_prompt = prompt_template.replace("{transcription}", transcription)
+    full_prompt = prompt_template.replace("{transcription}", transcription).replace("{title}", title)
     full_summary_json = get_completions(full_prompt, model, max_tokens, temperature)
     summary_data = json.loads(full_summary_json)
 
@@ -34,9 +35,9 @@ def generate_summary(url, transcription, prompt_template, model, max_tokens, tem
     # Generate a single summary from part summaries
     part_summaries_text = "\n".join(part_summaries)
     part_summary_prompt = read_prompt_template('part_summary_prompt.txt').replace("{part_summaries}", part_summaries_text)
-    single_part_summary = get_completions(part_summary_prompt, model, max_tokens, temperature)
+    full_summary = get_completions(part_summary_prompt, model, max_tokens, temperature)
     
-    summary_data["summary"] = single_part_summary
+    summary_data["summary"] = full_summary
     return summary_data
 
 # INIT
@@ -56,11 +57,11 @@ input_file_path = args.file
 prompt_file_path = 'summary_prompt.txt'
 
 # FILES
-url, transcription = read_transcription_file(input_file_path)
+url, title, transcription = read_transcription_file(input_file_path)
 prompt_template = read_prompt_template(prompt_file_path)
 
 # SUMMARY
-summary_data = generate_summary(url, transcription, prompt_template, gpt_model, gpt_maxtokens, gpt_temperature)
+summary_data = generate_summary(transcription, title, prompt_template, gpt_model, gpt_maxtokens, gpt_temperature)
 logger.debug(summary_data)
 output_file_path_json = Path(input_file_path).with_name('summary.json')
 save_as_json_to_file(json.dumps(summary_data), output_file_path_json)

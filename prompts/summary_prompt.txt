@@ -1,13 +1,11 @@
 Poniższy tekst jest transkrypcją nagrania wideo o nazwie title.
 Zwróć json zawierający: 
 -rozbudowane streszczenie zawierające jak najwięcej istotnych informacji z transkrypcji
--5 tagów opisujących te nagranie.
 -kategoria do jakiej można przypisać nagranie, np. nauka, medycyna, motoryzacja
 
 <json_structure>
 { 
     "description": "rozbudowane streszczenie transkrypcji",
-    "tags": "#tag1 #tag2 #tag3 #tag4 #tag5",
     "category": "kategoria"
 }
 </json_structure>

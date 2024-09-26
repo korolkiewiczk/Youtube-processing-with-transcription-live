@@ -4,7 +4,7 @@ import ffmpeg
 from pydub import AudioSegment
 
 def download_audio_as_bytes(youtube_url):
-    yt = YouTube(youtube_url)
+    yt = YouTube(youtube_url, client='WEB_CREATOR')
     audio_stream = yt.streams.filter(only_audio=True).first()
 
     audio_buffer = io.BytesIO()
@@ -20,11 +20,11 @@ def download_audio_as_bytes(youtube_url):
 
     stdout, _ = process.communicate(input=audio_buffer.read())
 
-    return stdout, yt.title
+    return stdout, yt.title, yt.author
 
-def get_title(youtube_url):
+def get_title_author(youtube_url):
     yt = YouTube(youtube_url)
-    return yt.title
+    return yt.title, yt.author
 
 def split_audio(audio_data, chunk_duration_ms):
     audio = AudioSegment.from_file(io.BytesIO(audio_data), format="mp3")

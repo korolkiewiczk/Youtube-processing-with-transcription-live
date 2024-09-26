@@ -57,7 +57,7 @@ input_file_path = args.file
 prompt_file_path = 'summary_prompt.txt'
 
 # FILES
-url, title, transcription = read_transcription_file(input_file_path)
+url, title, _, transcription = read_transcription_file(input_file_path)
 prompt_template = read_prompt_template(prompt_file_path)
 
 # SUMMARY

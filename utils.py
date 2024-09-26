@@ -103,11 +103,12 @@ def get_data_folder(folder, file_name):
         return os.path.join(folder_path, file_name)
     return folder_path
 
-def save_transcription_to_file(transcription, file_hash, youtube_url, title):
+def save_transcription_to_file(transcription, file_hash, youtube_url, title, author):
     file_path = get_data_folder(file_hash, "transcription.txt")
     with open(file_path, 'w', encoding='utf-8') as f:
         f.write(f"{youtube_url}\n")
         f.write(f"{title}\n")
+        f.write(f"{author}\n")
         f.write(transcription)
 
 def hash_url(url):
@@ -118,8 +119,9 @@ def read_transcription_file(file_path):
         lines = file.readlines()
         url = lines[0].strip()
         title = lines[1].strip()
-        transcription = ''.join(lines[2:]).strip()
-    return url, title, transcription
+        author = lines[2].strip()
+        transcription = ''.join(lines[3:]).strip()
+    return url, title, author, transcription
 
 def read_prompt_template(prompt_file_name):
     prompt_file_path = f'prompts/{prompt_file_name}'

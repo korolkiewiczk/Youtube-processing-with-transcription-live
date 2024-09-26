@@ -3,7 +3,7 @@ import argparse
 import configparser
 import os
 import io
-from audio_manager import download_audio_as_bytes, get_title, split_audio
+from audio_manager import download_audio_as_bytes, get_title_author, split_audio
 from convert_audio_to_16000hz import convert_audio_to_16000hz
 import logging
 from keys import OPENAI_API_KEY
@@ -17,14 +17,15 @@ from utils import get_data_folder, hash_url, save_transcription_to_file
 def get_audio_data(url, folder, filename):
     file_path = get_data_folder(folder, filename)
     title = None
+    author = None
     if os.path.exists(file_path):
         logger.info(f"File '{file_path}' already exists. Loading from disk.")
         with open(file_path, 'rb') as f:
             audio_data = f.read()
-            title = get_title(url)
+            title, author = get_title_author(url)
     else:
         logger.info(f'Downloading {url}')
-        audio_data, title = download_audio_as_bytes(url)
+        audio_data, title, author = download_audio_as_bytes(url)
         if audio_data:
             logger.info(f'Downloaded {len(audio_data)} bytes of audio.')
             with open(file_path, 'wb') as f:
@@ -33,7 +34,7 @@ def get_audio_data(url, folder, filename):
         else:
             logger.error(f"Failed to download audio from {url}")
             exit()
-    return audio_data, title
+    return audio_data, title, author
 
 def process_audio(audio_data):
     transcription_result = ""
@@ -123,12 +124,12 @@ file_hash = hash_url(url)
 folder = file_hash
 filename = "record.mp3"
 
-audio_data, title = get_audio_data(url, folder, filename)
+audio_data, title, author = get_audio_data(url, folder, filename)
 
 if args.api:
     transcription = process_audio_with_whisper_api(audio_data, whisper_model)
     logger.debug(f"Final transcription\n{transcription}")
-    save_transcription_to_file(transcription, file_hash, url, title)
+    save_transcription_to_file(transcription, file_hash, url, title, author)
 else:
     model_name = config.get('WHISPER', 'model_name')
     device_name = config.get('WHISPER', 'device_name')
@@ -140,4 +141,4 @@ else:
         model = whisper.load_model(model_name, device=device_name)
     transcription = process_audio(audio_data)
     logger.debug(f"Final transcription\n{transcription}")
-    save_transcription_to_file(transcription, file_hash, url, title)
+    save_transcription_to_file(transcription, file_hash, url, title, author)

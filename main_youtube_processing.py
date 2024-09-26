@@ -16,10 +16,11 @@ async def fetch_unprocessed_urls():
 async def mark_url_as_processed(record_id):
     airtable_url_inputs.update(record_id, {"Processed": True})
 
-async def save_summary_to_airtable(summary_json, url, title, hash):
+async def save_summary_to_airtable(summary_json, url, title, author, hash):
     summary_data = json.loads(summary_json)  # Converts JSON string to dictionary
     summary_data = {key.capitalize(): value for key, value in summary_data.items()}
     summary_data['Title'] = title
+    summary_data['Author'] = author
     summary_data['Url'] = url
     summary_data['Hash'] = hash
 
@@ -64,10 +65,10 @@ async def summarize_transcription(file_path):
 async def process_url(record_id, url):
     try:
         file_path, hash = await create_transcription(url)
-        url, title, _ = read_transcription_file(file_path)
+        url, title, author, _ = read_transcription_file(file_path)
 
         summary_json = await summarize_transcription(file_path)
-        await save_summary_to_airtable(summary_json, url, title, hash)
+        await save_summary_to_airtable(summary_json, url, title, author, hash)
         await mark_url_as_processed(record_id)
 
     except Exception as e:
@@ -87,13 +88,13 @@ async def create_tables():
     ])
 
     await ensure_table_exists(YOUTUBE_SUMMARIES_TABLE, [
-        {"name": "Hash", "type": "singleLineText"},
         {"name": "Title", "type": "singleLineText"},
+        {"name": "Author", "type": "singleLineText"},
         {"name": "Description", "type": "multilineText"},
         {"name": "Summary", "type": "multilineText"},
-        {"name": "Tags", "type": "singleLineText"},
         {"name": "Url", "type": "singleLineText"},
-        {"name": "Category", "type": "singleLineText"}
+        {"name": "Category", "type": "singleLineText"},
+        {"name": "Hash", "type": "singleLineText"}
     ])
 
 async def process_loop():

@@ -3,6 +3,7 @@ import argparse
 import configparser
 import os
 import io
+from logging_setup import setup_logging
 from audio_manager import download_audio_as_bytes, get_title_author, split_audio
 from convert_audio_to_16000hz import convert_audio_to_16000hz
 import logging
@@ -105,8 +106,8 @@ config.read('config.ini')
 
 # Accessing the settings
 logging_level = getattr(logging, config['LOGGING']['logging_level'])
-logging.basicConfig(level=logging_level)  # Set the desired log level (e.g., INFO, DEBUG, WARNING, ERROR)
-logger = logging.getLogger()
+# Set up logging
+logger = setup_logging("youtube_processing", logging_level)
 
 whisper_model = config.get('WHISPER', 'api_model_name')
 chunk_duration_ms = config.getint('PROCESSING', 'chunk_duration_ms')

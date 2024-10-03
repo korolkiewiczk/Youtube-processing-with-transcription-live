@@ -1,9 +1,11 @@
 import configparser
 import argparse
 import logging
+from datetime import datetime
 import json
 from pathlib import Path
 
+from logging_setup import setup_logging
 from gpt import get_completions
 from utils import read_transcription_file, read_prompt_template, save_as_json_to_file, read_prompt_template
 
@@ -47,8 +49,8 @@ gpt_model = config.get('GPT', 'gpt_model')
 gpt_maxtokens = config.getint('GPT', 'gpt_maxtokens')
 gpt_temperature = config.getfloat('GPT', 'gpt_temperature')
 logging_level = getattr(logging, config['LOGGING']['logging_level'])
-logging.basicConfig(level=logging_level)  # Set the desired log level (e.g., INFO, DEBUG, WARNING, ERROR)
-logger = logging.getLogger()
+# Set up logging
+logger = setup_logging("youtube_processing", logging_level)
 
 parser = argparse.ArgumentParser(description='Script to generate a summary from a transcription.')
 parser.add_argument('-f', '--file', type=str, required=True, help='Path to the input text file.')

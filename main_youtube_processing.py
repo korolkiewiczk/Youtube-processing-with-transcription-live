@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 from airtable import Airtable
 import json
+from logging_setup import setup_logging
 from airtable_manager import ensure_table_exists
 from keys import AIRTABLE_API_KEY, AIRTABLE_BASE_ID
 from utils import get_data_folder, hash_url, read_transcription_file
@@ -128,7 +129,7 @@ airtable_youtube_summaries = Airtable(AIRTABLE_BASE_ID, YOUTUBE_SUMMARIES_TABLE,
 
 # Accessing the settings
 logging_level = getattr(logging, config['LOGGING']['logging_level'])
-logging.basicConfig(level=logging_level)  # Set the desired log level (e.g., INFO, DEBUG, WARNING, ERROR)
-logger = logging.getLogger()
+# Set up logging
+logger = setup_logging("youtube_processing", logging_level)
 
 asyncio.run(process_loop())

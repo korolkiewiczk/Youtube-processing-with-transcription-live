@@ -10,6 +10,7 @@ import queue
 import webrtcvad
 import logging
 
+from logging_setup import setup_logging
 from convert_audio_to_16000hz import convert_audio_to_16000hz
 from utils import change_font_size, find_sentences, get_random_color
 from gpt import get_completions
@@ -334,8 +335,8 @@ prompts = []
 
 init_prompts_from_config(config, prompts)
 
-logging.basicConfig(level=logging_level)  # Set the desired log level (e.g., INFO, DEBUG, WARNING, ERROR)
-logger = logging.getLogger()
+# Set up logging
+logger = setup_logging("audio_transcription", logging_level)
 
  # Queues for thread communication
 transcription_queue = queue.Queue()

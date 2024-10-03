@@ -73,6 +73,7 @@ async def process_url(record_id, url):
 
     except Exception as e:
         logger.error(f"Failed to process {url}: {str(e)}")
+        airtable_url_inputs.update(record_id, {"Processed": True, "Error": str(e)})
 
 async def create_tables():
     await ensure_table_exists(URL_INPUTS_TABLE, [
@@ -84,7 +85,8 @@ async def create_tables():
                 "color": "greenBright",
                 "icon": "check"
             }
-        }
+        },
+        {"name": "Error", "type": "multilineText"}
     ])
 
     await ensure_table_exists(YOUTUBE_SUMMARIES_TABLE, [

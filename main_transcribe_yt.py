@@ -15,7 +15,7 @@ from pydub.silence import split_on_silence
 
 from utils import get_data_folder, hash_url, save_transcription_to_file
 
-def get_audio_data(url, folder, filename):
+def get_audio_data(url, folder, filename, client):
     file_path = get_data_folder(folder, filename)
     title = None
     author = None
@@ -26,7 +26,7 @@ def get_audio_data(url, folder, filename):
             title, author = get_title_author(url)
     else:
         logger.info(f'Downloading {url}')
-        audio_data, title, author = download_audio_as_bytes(url)
+        audio_data, title, author = download_audio_as_bytes(url, client=client)
         if audio_data:
             logger.info(f'Downloaded {len(audio_data)} bytes of audio.')
             with open(file_path, 'wb') as f:
@@ -115,6 +115,7 @@ chunk_duration_ms = config.getint('PROCESSING', 'chunk_duration_ms')
 parser = argparse.ArgumentParser(description='Download audio from YouTube and transcribe it.')
 parser.add_argument('-c', '--url', type=str, required=True, help='URL of the YouTube video')
 parser.add_argument('-a', '--api', action='store_true', help='Use API for transcription')
+parser.add_argument('--client', type=str, default='WEB_CREATOR', help='Client to use for YouTube download')
 
 # MAIN CODE
 args = parser.parse_args()
@@ -125,7 +126,7 @@ file_hash = hash_url(url)
 folder = file_hash
 filename = "record.mp3"
 
-audio_data, title, author = get_audio_data(url, folder, filename)
+audio_data, title, author = get_audio_data(url, folder, filename, client=args.client)
 
 if args.api:
     transcription = process_audio_with_whisper_api(audio_data, whisper_model)

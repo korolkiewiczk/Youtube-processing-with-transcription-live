@@ -3,8 +3,8 @@ from pytubefix import YouTube
 import ffmpeg
 from pydub import AudioSegment
 
-def download_audio_as_bytes(youtube_url):
-    yt = YouTube(youtube_url, client='WEB_CREATOR')
+def download_audio_as_bytes(youtube_url, client='WEB_CREATOR'):
+    yt = YouTube(youtube_url, client=client)
     audio_stream = yt.streams.filter(only_audio=True).first()
 
     audio_buffer = io.BytesIO()

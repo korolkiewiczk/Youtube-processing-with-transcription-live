@@ -27,26 +27,46 @@ async def save_summary_to_airtable(summary_json, url, title, author, hash):
 
     airtable_youtube_summaries.insert(summary_data)
 
-async def create_transcription(url):
-    hash_value = hash_url(url)
-    file_path = get_data_folder(hash_value, "transcription.txt")
-    
-    # Check if the transcription file already exists
-    if not os.path.exists(file_path):
+async def create_transcription(url, record_id):
+    clients = [
+        'WEB_EMBED', 'WEB_CREATOR', 'WEB_MUSIC', 'WEB_SAFARI',
+        'ANDROID', 'WEB', 'ANDROID_MUSIC', 'ANDROID_CREATOR', 'ANDROID_VR', 'ANDROID_PRODUCER', 'ANDROID_TESTSUITE',
+        'IOS', 'IOS_MUSIC', 'IOS_CREATOR',
+        'MWEB', 'TV_EMBED', 'MEDIA_CONNECT'
+    ]
+    max_retries = 5
+    retries = 0
+
+    # Get current retry count from Airtable
+    record = airtable_url_inputs.get(record_id)
+    if 'Retries' in record['fields']:
+        retries = record['fields']['Retries']
+
+    while retries < max_retries:
+        client = clients[retries % len(clients)]
+        logger.info(f"Attempt {retries + 1} with client {client}")
+
         use_api = config.getboolean('WHISPER', 'use_api')
-        command = ['python', 'main_transcribe_yt.py', '-c', url]
+        command = ['python', 'main_transcribe_yt.py', '-c', url, '--client', client]
         if use_api:
             command.append('-a')
-        
+
         process = await asyncio.create_subprocess_exec(
             *command,
             stdout=None, stderr=None
         )
         await process.communicate()
-    else:
-        logger.debug(f"Transcription {file_path} exists")
 
-    return file_path, hash_value
+        file_path = get_data_folder(hash_url(url), "transcription.txt")
+        if os.path.exists(file_path):
+            return file_path, hash_url(url)
+
+        retries += 1
+        airtable_url_inputs.update(record_id, {"Retries": retries})
+
+    logger.error(f"Failed to transcribe {url} after {max_retries} attempts")
+    airtable_url_inputs.update(record_id, {"Processed": True, "Error": "Too many attempts"})
+    return None, None
 
 async def summarize_transcription(file_path):
     json_file_path = Path(file_path).with_name('summary.json')
@@ -65,7 +85,9 @@ async def summarize_transcription(file_path):
 
 async def process_url(record_id, url):
     try:
-        file_path, hash = await create_transcription(url)
+        file_path, hash = await create_transcription(url, record_id)
+        if not file_path:
+            return
         url, title, author, _ = read_transcription_file(file_path)
 
         summary_json = await summarize_transcription(file_path)
@@ -87,7 +109,14 @@ async def create_tables():
                 "icon": "check"
             }
         },
-        {"name": "Error", "type": "multilineText"}
+        {"name": "Error", "type": "multilineText"},
+        {
+            "name": "Retries",
+            "type": "number",
+            "options": {
+                "precision": 0
+            }
+        }
     ])
 
     await ensure_table_exists(YOUTUBE_SUMMARIES_TABLE, [

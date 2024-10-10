@@ -9,10 +9,11 @@ from logging_setup import setup_logging
 from airtable_manager import ensure_table_exists
 from keys import AIRTABLE_API_KEY, AIRTABLE_BASE_ID
 from utils import get_data_folder, hash_url, read_transcription_file
+from urllib.parse import urlparse
 
 async def fetch_unprocessed_urls():
     records = airtable_url_inputs.get_all(filterByFormula="NOT({Processed})")
-    return [(record['id'], record['fields']['Url']) for record in records]
+    return [(record['id'], record['fields']['Url']) for record in records if 'Url' in record['fields']]
 
 async def mark_url_as_processed(record_id):
     airtable_url_inputs.update(record_id, {"Processed": True})
@@ -139,7 +140,12 @@ async def process_loop():
             continue
 
         for record_id, url in urls:
-            await process_url(record_id, url) 
+            parsed_url = urlparse(url)
+            if parsed_url.scheme and parsed_url.netloc:
+                await process_url(record_id, url)
+            else:
+                logger.warning(f"Invalid URL: {url}")
+                airtable_url_inputs.update(record_id, {"Processed": True, "Error": "Invalid URL"})
 
         await asyncio.sleep(sleep_time) 
 

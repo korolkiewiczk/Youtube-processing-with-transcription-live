@@ -29,6 +29,14 @@ async def save_summary_to_airtable(summary_json, url, title, author, hash):
     airtable_youtube_summaries.insert(summary_data)
 
 async def create_transcription(url, record_id):
+
+    transcription_file_name = "transcription.txt"
+
+    file_path = get_data_folder(hash_url(url), transcription_file_name)
+    if os.path.exists(file_path):
+        logger.info(f"Trancription file {file_path} already exists...")
+        return file_path, hash_url(url)
+
     clients = [
         'WEB_EMBED', 'WEB_CREATOR', 'WEB_MUSIC', 'WEB_SAFARI',
         'ANDROID', 'WEB', 'ANDROID_MUSIC', 'ANDROID_CREATOR', 'ANDROID_VR', 'ANDROID_PRODUCER', 'ANDROID_TESTSUITE',
@@ -58,7 +66,7 @@ async def create_transcription(url, record_id):
         )
         await process.communicate()
 
-        file_path = get_data_folder(hash_url(url), "transcription.txt")
+        file_path = get_data_folder(hash_url(url), transcription_file_name)
         if os.path.exists(file_path):
             return file_path, hash_url(url)
 

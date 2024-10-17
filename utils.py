@@ -4,6 +4,8 @@ import os
 import random
 import re
 
+# GUI
+
 def get_random_color():
     color_palette = ['#99341e',
         '#1e9934',
@@ -64,31 +66,6 @@ def change_font_size(event, text_font):
         text_font.configure(size=new_size)
 
 
-def find_sentences(text):
-    # Split the text into sentences based on punctuation
-    sentences = re.split(r'(?<=[.?!])(\s+)', text)
-    # Find start and end indices of each sentence in the text
-    indices = []
-    start = 0
-    skip_next = False
-    for sentence in sentences:
-        if skip_next:
-            skip_next = False
-            continue
-
-        # Check if next item is whitespace and include it in the current sentence
-        if sentences.index(sentence) < len(sentences) - 1:
-            next_item = sentences[sentences.index(sentence) + 1]
-            if next_item.isspace():
-                sentence += next_item
-                skip_next = True
-
-        end = start + len(sentence)
-        indices.append((start, end))
-        start = end
-
-    return indices
-
 # FILES
 
 def get_data_folder(folder, file_name):
@@ -132,3 +109,44 @@ def read_prompt_template(prompt_file_name):
 def save_as_json_to_file(json_text, output_file_path):
     with open(output_file_path, 'w', encoding='utf-8') as file:
         json.dump(json.loads(json_text), file, ensure_ascii=False, indent=4)
+
+
+# TEXT
+
+def find_sentences(text):
+    # Split the text into sentences based on punctuation
+    sentences = re.split(r'(?<=[.?!])(\s+)', text)
+    # Find start and end indices of each sentence in the text
+    indices = []
+    start = 0
+    skip_next = False
+    for sentence in sentences:
+        if skip_next:
+            skip_next = False
+            continue
+
+        # Check if next item is whitespace and include it in the current sentence
+        if sentences.index(sentence) < len(sentences) - 1:
+            next_item = sentences[sentences.index(sentence) + 1]
+            if next_item.isspace():
+                sentence += next_item
+                skip_next = True
+
+        end = start + len(sentence)
+        indices.append((start, end))
+        start = end
+
+    return indices
+
+def find_nearest_sentence_boundary(text, index, direction):
+    if index <= 0 or index >= len(text):
+        return index
+    
+    sentence_endings = [".", "!", "?"]
+
+    if direction == -1:
+        return max([text.rfind(punct, 0, index) for punct in sentence_endings]) + 1
+    elif direction == 1:
+        return min([text.find(punct, index) for punct in sentence_endings if text.find(punct, index) != -1]) + 1
+    else:
+        return index

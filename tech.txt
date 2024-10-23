@@ -1,0 +1,23 @@
+Jako programista python stwórz aplikację btachowego przetwarzania transkrypcji
+-Skrypt main_yt.py -c https://youtube.com/some_id tworzy transkrypcje dla danego filmu youtube (plik HASH.txt, pierwszy wiersz to URL, reszta wierszy to transkrypcja)
+-W wyniku otrzymujemy plik HASH.txt który przekazujemy do skryptu gpt_summary -f HASH.txt któr tworzy plik JSON jak w przykładzie
+{
+    "title": "Możliwość podróży w czasie",
+    "description": "Nagranie rozważa teorię podróży w czasie......",
+    "tags": " #podróżeCzasowe #termodynamika #Einstein #tuneleCzasoprzestrzenne #wieloświaty",
+    "url": "https://www.youtube.com/watch?v=7d4oxH60R0w"
+}
+
+HASH jest hashem URL pliku
+def hash_url(url):
+    return hashlib.sha1(url.encode()).hexdigest()
+
+
+Jako bazy danych używamy AirTable
+Należy:
+asynchronicznie pobierać z tabeli "Url Inputs" url-e które chcemy przetwarzać. Jeśli przetworzymy url, oznaczamy url jako przetworzony
+następnie należy tworzyć transkrypcje używając wyżej podanych skryptów.
+Na końcu wynik (czyli otrzymany JSON) zapisujemy do tabeli "Youtube Summaries", poza polami w JSON jak są podane wyżej, należy też dołączyć transkrypcję danego audio.
+
+Proszę podaj czysty kod python, użyj jakiejść biblioteki do przetwarzania asynchronicznego. Tworzenie transkrypcji może trwać nawet kilkanaście minut.
+Podaj gotowy kod bez dodatkowych komentarzy. Kod ma być po angielsku.

@@ -1,4 +1,4 @@
-import time
+import os
 import tkinter as tk
 import configparser
 from tkinter import scrolledtext
@@ -10,6 +10,7 @@ import queue
 import webrtcvad
 import logging
 
+from logging_setup import setup_logging
 from convert_audio_to_16000hz import convert_audio_to_16000hz
 from utils import change_font_size, find_sentences, get_random_color
 from gpt import get_completions
@@ -52,7 +53,13 @@ def read_stream(stream, chunk, frame_rate, shared_queue):
             silent_frames = 0
 
 def process_audio(shared_queue: queue):
+    from datetime import datetime
     iter = 1
+    # Create a unique directory name based on the current date and time
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    records_dir = os.path.join('records', timestamp)
+    if not os.path.exists(records_dir):
+        os.makedirs(records_dir)
     while True:
         all_frames = shared_queue.get()
         if all_frames is None:  # None is used as a signal to stop the thread
@@ -61,15 +68,15 @@ def process_audio(shared_queue: queue):
         logger.debug("converting chunk")
         converted_buffer, audio = convert_audio_to_16000hz(logger, frame_rate, all_frames)
 
-        if save_wav:
+        if save_wav_enabled:
             logger.debug("saving chunk")
-            save_wav(p_audio, 1, 16000, audio_format, converted_buffer, "out_"+str(iter)+".wav")
+            save_wav(p_audio, 1, 16000, audio_format, converted_buffer, os.path.join(records_dir, "out_"+str(iter)+".wav"))
 
         logger.debug("transcribing chunk")
         texts = transcribe_audio(logger, model, audio)
 
         transcription_queue.put(''.join(texts))
-        print(texts)
+        logger.debug(texts)
         conversation.extend(texts)
         shared_queue.task_done()
         iter = iter + 1
@@ -108,7 +115,7 @@ def send_to_gpt(promptNo, text):
     if len(prompts) >= promptNo:
         prompt = prompts[promptNo - 1]
     logger.debug('Using prompt: "' + prompt + '" with text "' + text + '"')
-    completions = get_completions(prompt, text, gpt_model, gpt_temperature)
+    completions = get_completions(text, gpt_model, gpt_maxtokens, gpt_temperature, prompt)
     logger.debug(completions)
     return completions
 
@@ -117,7 +124,7 @@ def send_to_gpt_stream(promptNo, text):
     if len(prompts) >= promptNo:
         prompt = prompts[promptNo - 1]
     logger.debug('Using prompt: "' + prompt + '" with text "' + text + '"')
-    completions = get_completions_stream(prompt, text, gpt_model, gpt_temperature)
+    completions = get_completions_stream(text, gpt_model, gpt_maxtokens, gpt_temperature, prompt)
     return completions
 
 def handle_key(event, no, text_area: scrolledtext.ScrolledText):
@@ -292,15 +299,8 @@ def create_gui():
 
 def init_prompts_from_config(config, prompts):
     try:
-        prompts.append(config.get('PROMPTS', 'P1'))
-        prompts.append(config.get('PROMPTS', 'P2'))
-        prompts.append(config.get('PROMPTS', 'P3'))
-        prompts.append(config.get('PROMPTS', 'P4'))
-        prompts.append(config.get('PROMPTS', 'P5'))
-        prompts.append(config.get('PROMPTS', 'P6'))
-        prompts.append(config.get('PROMPTS', 'P7'))
-        prompts.append(config.get('PROMPTS', 'P8'))
-        prompts.append(config.get('PROMPTS', 'P9'))
+        for i in range(1, 10):
+            prompts.append(config.get('PROMPTS', f'P{i}'))
     except:
         pass
 
@@ -317,12 +317,13 @@ record_seconds = config.getint('RECORDING', 'record_seconds')
 max_record_seconds = config.getint('RECORDING', 'max_record_seconds')
 audio_format = pyaudio.paInt16
 required_silence_length = config.getint('RECORDING', 'required_silence_length')
-save_wav = config.getboolean('RECORDING', 'save_wav')
+save_wav_enabled = config.getboolean('RECORDING', 'save_wav')
 vad_mode = config.getint('RECORDING', 'vad_mode')
 
 gpt_streaming = config.getboolean('GPT', 'gpt_streaming')
 gpt_model = config.get('GPT', 'gpt_model')
 gpt_temperature = config.getfloat('GPT', 'gpt_temperature')
+gpt_maxtokens = config.getint('GPT', 'gpt_maxtokens')
 
 font_name = config.get('VISUAL', 'font_name')
 font_size = config.getint('VISUAL', 'font_size')
@@ -334,8 +335,8 @@ prompts = []
 
 init_prompts_from_config(config, prompts)
 
-logging.basicConfig(level=logging_level)  # Set the desired log level (e.g., INFO, DEBUG, WARNING, ERROR)
-logger = logging.getLogger()
+# Set up logging
+logger = setup_logging("audio_transcription", logging_level)
 
  # Queues for thread communication
 transcription_queue = queue.Queue()
@@ -362,7 +363,7 @@ else:
 # Shared queue for communication between threads
 shared_queue = queue.Queue()
 
-print("Recording started")
+logger.info("Recording started")
 # Start threads
 thread1 = threading.Thread(target=read_stream, args=(stream, chunk_size, frame_rate, shared_queue))
 thread2 = threading.Thread(target=process_audio, args=(shared_queue,))
@@ -377,7 +378,7 @@ thread1.join()
 thread2.join()
 
 logger.info("stop")
-print(''.join(conversation))
+logger.info(''.join(conversation))
 stream.stop_stream()
 stream.close()
 p_audio.terminate()

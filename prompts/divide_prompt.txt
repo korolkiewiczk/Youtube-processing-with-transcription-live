@@ -1,0 +1,7 @@
+Podziel poniższą transkrypcję na logiczne części - paragrafy.
+
+<transcription>
+{transcription}
+</transcription>
+
+Podziel każdą część za pomocą dwóch separatorów nowej linii. Zachowaj język transkrypcji i nie dokonuj żadnych modyfikacji, chyba że występują błędy gramatyczne lub powtórzenia wynikające z błędów transkrypcji.

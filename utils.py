@@ -1,6 +1,10 @@
+import hashlib
+import json
+import os
 import random
 import re
 
+# GUI
 
 def get_random_color():
     color_palette = ['#99341e',
@@ -62,6 +66,53 @@ def change_font_size(event, text_font):
         text_font.configure(size=new_size)
 
 
+# FILES
+
+def get_data_folder(folder, file_name):
+    folder_path = f"data/{folder}/"
+    
+    # Check if the folder exists, if not, create it
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+
+    # Return the full path with the provided file name, if any
+    if file_name:
+        return os.path.join(folder_path, file_name)
+    return folder_path
+
+def save_transcription_to_file(transcription, file_hash, youtube_url, title, author):
+    file_path = get_data_folder(file_hash, "transcription.txt")
+    with open(file_path, 'w', encoding='utf-8') as f:
+        f.write(f"{youtube_url}\n")
+        f.write(f"{title}\n")
+        f.write(f"{author}\n")
+        f.write(transcription)
+
+def hash_url(url):
+    return hashlib.sha1(url.encode()).hexdigest()
+
+def read_transcription_file(file_path):
+    with open(file_path, 'r', encoding='utf-8') as file:
+        lines = file.readlines()
+        url = lines[0].strip()
+        title = lines[1].strip()
+        author = lines[2].strip()
+        transcription = ''.join(lines[3:]).strip()
+    return url, title, author, transcription
+
+def read_prompt_template(prompt_file_name):
+    prompt_file_path = f'prompts/{prompt_file_name}'
+    with open(prompt_file_path, 'r', encoding='utf-8') as file:
+        prompt_template = file.read()
+    return prompt_template
+
+def save_as_json_to_file(json_text, output_file_path):
+    with open(output_file_path, 'w', encoding='utf-8') as file:
+        json.dump(json.loads(json_text), file, ensure_ascii=False, indent=4)
+
+
+# TEXT
+
 def find_sentences(text):
     # Split the text into sentences based on punctuation
     sentences = re.split(r'(?<=[.?!])(\s+)', text)
@@ -86,3 +137,16 @@ def find_sentences(text):
         start = end
 
     return indices
+
+def find_nearest_sentence_boundary(text, index, direction):
+    if index <= 0 or index >= len(text):
+        return index
+    
+    sentence_endings = [".", "!", "?"]
+
+    if direction == -1:
+        return max([text.rfind(punct, 0, index) for punct in sentence_endings]) + 1
+    elif direction == 1:
+        return min([text.find(punct, index) for punct in sentence_endings if text.find(punct, index) != -1]) + 1
+    else:
+        return index

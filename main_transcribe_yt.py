@@ -11,7 +11,6 @@ from keys import OPENAI_API_KEY
 from transcribe_audio import transcribe_audio
 from openai import OpenAI
 from pydub import AudioSegment
-from pydub.silence import split_on_silence
 
 from utils import get_data_folder, hash_url, save_transcription_to_file
 

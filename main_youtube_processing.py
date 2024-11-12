@@ -1,3 +1,4 @@
+import argparse
 import asyncio
 import configparser
 import logging
@@ -155,6 +156,11 @@ async def process_loop():
                 logger.warning(f"Invalid URL: {url}")
                 airtable_url_inputs.update(record_id, {"Processed": True, "Error": "Invalid URL"})
 
+        if args.once:
+            if args.shutdown:
+                os.system("shutdown /s /t 1")
+            break
+
         await asyncio.sleep(sleep_time) 
 
 config = configparser.ConfigParser()
@@ -165,6 +171,12 @@ YOUTUBE_SUMMARIES_TABLE = config.get('AIRTABLE', 'summaries_table_name')
 
 sleep_time = config.getint('PROCESSING', 'sleep_time')
 
+# Command line arguments
+parser = argparse.ArgumentParser(description='Process YouTube URLs from Airtable.')
+parser.add_argument('--once', action='store_true', default=False, help='Run processing once and exit')
+parser.add_argument('--shutdown', action='store_true', default=False, help='Shutdown PC after processing')
+
+args = parser.parse_args()
 
 # Airtable instance
 airtable_url_inputs = Airtable(AIRTABLE_BASE_ID, URL_INPUTS_TABLE, AIRTABLE_API_KEY)
@@ -174,5 +186,9 @@ airtable_youtube_summaries = Airtable(AIRTABLE_BASE_ID, YOUTUBE_SUMMARIES_TABLE,
 logging_level = getattr(logging, config['LOGGING']['logging_level'])
 # Set up logging
 logger = setup_logging("youtube_processing", logging_level)
+if args.once:
+    logger.debug(f"Running with once flag: {args.once}")
+    if args.shutdown:
+        logger.debug("Running with shutdown flag: will shutdown after processing")
 
 asyncio.run(process_loop())

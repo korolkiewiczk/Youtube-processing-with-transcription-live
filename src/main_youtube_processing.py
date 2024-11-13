@@ -1,16 +1,18 @@
 import argparse
 import asyncio
 import configparser
+import json
 import logging
 import os
 from pathlib import Path
-from airtable import Airtable
-import json
-from logging_setup import setup_logging
-from airtable_manager import ensure_table_exists
-from keys import AIRTABLE_API_KEY, AIRTABLE_BASE_ID
-from utils import get_data_folder, hash_url, read_transcription_file
 from urllib.parse import urlparse
+
+from airtable import Airtable
+
+from keys import AIRTABLE_API_KEY, AIRTABLE_BASE_ID
+from utils.utils import get_data_folder, hash_url, read_transcription_file
+from utils.airtable_manager import ensure_table_exists
+from utils.logging_setup import setup_logging
 
 async def fetch_unprocessed_urls():
     records = airtable_url_inputs.get_all(filterByFormula="NOT({Processed})")

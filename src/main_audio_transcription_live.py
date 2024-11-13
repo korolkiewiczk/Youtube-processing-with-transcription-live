@@ -10,15 +10,15 @@ import queue
 import webrtcvad
 import logging
 
-from logging_setup import setup_logging
-from convert_audio_to_16000hz import convert_audio_to_16000hz
-from utils import change_font_size, find_sentences, get_random_color
-from gpt import get_completions
-from gpt_stream import get_completions_stream
-from pyaudio_manager import get_device_info, get_stream, initialize_pyaudio
-from frame_validator import is_valid_frame, to_mono
-from save_wav import save_wav
-from transcribe_audio import transcribe_audio
+from utils.logging_setup import setup_logging
+from audio.convert_audio_to_16000hz import convert_audio_to_16000hz
+from utils.utils import change_font_size, find_sentences, get_random_color
+from gpt.gpt import get_completions
+from gpt.gpt_stream import get_completions_stream
+from audio.pyaudio_manager import get_device_info, get_stream, initialize_pyaudio
+from audio.frame_validator import is_valid_frame, to_mono
+from audio.save_wav import save_wav
+from audio.transcribe_audio import transcribe_audio
 
 ### FUNCTIONS ###
 

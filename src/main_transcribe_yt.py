@@ -1,19 +1,19 @@
-import whisper
 import argparse
 import configparser
-import os
 import io
-from logging_setup import setup_logging
-from audio_manager import download_audio_as_bytes, get_title_author, split_audio
-from convert_audio_to_16000hz import convert_audio_to_16000hz
 import logging
-from keys import OPENAI_API_KEY
-from transcribe_audio import transcribe_audio
+import os
+import whisper
+
 from openai import OpenAI
 from pydub import AudioSegment
-from pydub.silence import split_on_silence
 
-from utils import get_data_folder, hash_url, save_transcription_to_file
+from audio.audio_manager import download_audio_as_bytes, get_title_author, split_audio
+from audio.convert_audio_to_16000hz import convert_audio_to_16000hz
+from keys import OPENAI_API_KEY
+from audio.transcribe_audio import transcribe_audio
+from utils.utils import get_data_folder, hash_url, save_transcription_to_file
+from utils.logging_setup import setup_logging
 
 def get_audio_data(url, folder, filename, client):
     file_path = get_data_folder(folder, filename)

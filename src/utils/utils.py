@@ -101,7 +101,7 @@ def read_transcription_file(file_path):
     return url, title, author, transcription
 
 def read_prompt_template(prompt_file_name):
-    prompt_file_path = f'prompts/{prompt_file_name}'
+    prompt_file_path = f'../prompts/{prompt_file_name}'
     with open(prompt_file_path, 'r', encoding='utf-8') as file:
         prompt_template = file.read()
     return prompt_template

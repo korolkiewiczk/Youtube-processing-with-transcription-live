@@ -4,17 +4,28 @@ import logging
 import json
 from pathlib import Path
 import tiktoken
-from logging_setup import setup_logging
-from gpt import get_completions
-from utils import find_nearest_sentence_boundary, read_transcription_file, read_prompt_template, save_as_json_to_file, read_prompt_template
+
+from utils.logging_setup import setup_logging
+from gpt.gpt import get_completions
+from utils.utils import (
+    find_nearest_sentence_boundary,
+    read_transcription_file,
+    read_prompt_template,
+    save_as_json_to_file
+)
 
 separator_char = "†"
 description_field = "description"
 category_field = "category"
 summary_field = "summary"
-
+summary_prompt_file_path = 'summary_prompt.txt'
+divide_prompt_file_path = 'divide_prompt.txt'
+part_prompt_file_path = 'part_prompt.txt'
+part_summary_prompt_file_path = 'part_summary_prompt.txt'
+summary_file_name = 'summary.json'
+summary_md_file_name = 'summary.md'
 def divide_transcription(transcription, model, max_tokens, temperature):
-    divide_prompt = read_prompt_template('divide_prompt.txt')
+    divide_prompt = read_prompt_template(divide_prompt_file_path)
     prompt = divide_prompt.replace("{transcription}", transcription)
     parts = get_completions(prompt, model, max_tokens, temperature)
     return parts.split("\n\n")  # Assuming parts are separated by double newlines
@@ -29,7 +40,7 @@ def generate_summary(transcription, title, prompt_template, model, max_tokens, t
 
     # Read part prompt template
     description = summary_data[description_field]
-    part_prompt_template = read_prompt_template('part_prompt.txt').replace("{description}", description)
+    part_prompt_template = read_prompt_template(part_prompt_file_path).replace("{description}", description)
     part_summaries = []
     for part in parts:
         part_prompt = part_prompt_template.replace("{full_summary}", description).replace("{part}", part)
@@ -38,7 +49,7 @@ def generate_summary(transcription, title, prompt_template, model, max_tokens, t
     
     # Generate a single summary from part summaries
     part_summaries_text = "\n".join(part_summaries)
-    part_summary_prompt = read_prompt_template('part_summary_prompt.txt').replace("{part_summaries}", part_summaries_text)
+    part_summary_prompt = read_prompt_template(part_summary_prompt_file_path).replace("{part_summaries}", part_summaries_text)
     full_summary = get_completions(part_summary_prompt, model, max_tokens, temperature)
     
     summary_data[summary_field] = full_summary
@@ -113,20 +124,19 @@ parser = argparse.ArgumentParser(description='Script to generate a summary from 
 parser.add_argument('-f', '--file', type=str, required=True, help='Path to the input text file.')
 args = parser.parse_args()
 input_file_path = args.file
-prompt_file_path = 'summary_prompt.txt'
 
 # FILES
 url, title, _, transcription = read_transcription_file(input_file_path)
-prompt_template = read_prompt_template(prompt_file_path)
+prompt_template = read_prompt_template(summary_prompt_file_path)
 
 # SUMMARY
 summary_data = generate_summary_recursive(transcription, title, prompt_template, gpt_model, gpt_maxtokens, gpt_temperature, token_limit, overlap_percentage)
 replace_summarized_if_needed(prompt_template, summary_data, title, gpt_model, gpt_maxtokens, gpt_temperature)
 logger.debug(summary_data)
-output_file_path_json = Path(input_file_path).with_name('summary.json')
+output_file_path_json = Path(input_file_path).with_name(summary_file_name)
 save_as_json_to_file(json.dumps(summary_data), output_file_path_json)
 
 # Save summary to summary.md
-output_file_path_md = Path(input_file_path).with_name('summary.md')
+output_file_path_md = Path(input_file_path).with_name(summary_md_file_name)
 with open(output_file_path_md, 'w', encoding='utf-8') as file:
     file.write(summary_data[summary_field])
